@@ -1,4 +1,4 @@
-update=2018/05/04 21:09:56
+update=2018/05/12 23:01:28
 version=1
 last_client=kicad
 [pcbnew]
@@ -27,7 +27,7 @@ NetIExt=net
 version=1
 [eeschema]
 version=1
-LibDir=D:/yutaka_home/my_doc/Arduino/arduino_micro_shield-master/arduino_micro_shield.pretty;D:/yutaka_home/my_doc/Arduino/arduino_micro_shield-master;D:/yutaka_home/my_doc/Arduino/kicad_library
+LibDir=D:/yutaka_home/my_doc/Arduino/arduino_micro_shield-master/arduino_micro_shield.pretty;D:/yutaka_home/my_doc/Arduino/arduino_micro_shield-master;D:/yutaka_home/my_doc/Arduino/kicad_library;C:/Users/yutaka/Desktop
 [eeschema/libraries]
 LibName1=myLib
 LibName2=arduino_micro_shield
