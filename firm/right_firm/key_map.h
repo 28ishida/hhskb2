@@ -27,7 +27,7 @@ static int RLayer1Symbol[ROWMAX][COLMAX] =
 {
   { '6',   '7',  '8',  '9',  '0',  DELE },
   { 'y',   'u',  'i',  'o',  'p',  '\\' },
-  { 'h',   'j',  'k',  'l',  ';',  RET_ ,
+  { 'h',   'j',  'k',  'l',  ';',  RET_ },
   { 'n',   'm',  ',',  '.',  '/',  RSFT },
   //{ RCTL, RALT, SPC_, NASB, RGUI, NASB, NASB, NASB }    // oneshot用
   { SPC_,   Fn,  RGUI, NASB, NASB, NASB }, // 通常用

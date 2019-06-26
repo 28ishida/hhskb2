@@ -1,8 +1,8 @@
-#include <libParseKey.h>
 #include <Keyboard.h>
 #include "hhskb_firm.h"
 #include "key_definition.h"
 #include "key_map.h"                             
+#include <libParseKey.h>
 
 #define ONESHOT_DEF
 //#undef ONESHOT_DEF
@@ -60,35 +60,38 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  unsigned long start = micros();
+  //unsigned long start = micros();
   memset(RKey, (char)OFF, SUM);
   ParseKey(RKey);
-  unsigned long end = micros();
+  //unsigned long end = micros();
 
-  if (speedCheck > 0)
+  for ( int i = 0; i <ROWMAX; i++ )
   {
-    Serial.println("RIGHT parse");
-    Serial.print(end - start);
-    Serial.println("");
-    Serial.println("");
+    for ( int j = 0; j < COLMAX; j++ )
+    {
+      if ( RKey[i][j] == 0 )
+      {
+        Serial.print( "0" );
+      }
+      else
+      {
+       Serial.print( "1" ); 
+      }
+      
+    }
+    Serial.print(" ");
   }
-
+    
+  Serial.print("\n");
+  //delay(1000);
+  
   keyboardAction(Right);
   memcpy(OldRKey, RKey, SUM);
 
-  start = micros();
+  //start = micros();
   //memset(LKey, (char)OFF, SUM);
   //ParseLeftKey(LKey);
-  end = micros();
-
-  if (speedCheck > 0)
-  {
-    Serial.println("LEFT parse");
-    Serial.print(end - start);
-    Serial.println("");
-    Serial.println("");
-    speedCheck--;
-  }
+  //end = micros();
   
   //keyboardAction(Left);
   memcpy(OldLKey, LKey, SUM);

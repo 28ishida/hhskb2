@@ -27,4 +27,4 @@ static const int NCON = 0x1D;
 // キー配列の最大数
 #define ROWMAX  5
 #define COLMAX  6
-static const int SUM = 40;
+static const int SUM = 30;
