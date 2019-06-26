@@ -1,6 +1,6 @@
+#include <libParseKey.h>
 #include <Keyboard.h>
 #include "hhskb_firm.h"
-#include "right_firm.h"
 #include "key_definition.h"
 #include "key_map.h"                             
 
@@ -51,7 +51,7 @@ void setup() {
   memset(OldRKey, (char)OFF, SUM);
   memset(OldLKey, (char)OFF, SUM);
 
-  InitRightFirm();
+  Init();
 //  InitLeftFirm();
 
   Keyboard.begin();
@@ -62,7 +62,7 @@ void loop() {
 
   unsigned long start = micros();
   memset(RKey, (char)OFF, SUM);
-  ParseRightKey(RKey);
+  ParseKey(RKey);
   unsigned long end = micros();
 
   if (speedCheck > 0)

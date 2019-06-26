@@ -1,4 +1,4 @@
-#include "right_firm.h"
+#include "libParseKey.h"
 #include <arduino.h>
 
 // 右手側ピン番号の定義
@@ -18,7 +18,7 @@ static void digitalWritePortRegister(unsigned int pin, unsigned int hOrl);
 static char digitalReadPortRegister(unsigned int pin);
 
 // 右手モジュールの初期化。一度だけ呼び出してください
-void InitRightFirm()
+void Init()
 {
 	pinMode(OP1, INPUT_PULLUP);
 	pinMode(OP2, INPUT_PULLUP);
@@ -40,7 +40,7 @@ void InitRightFirm()
 }
 
 // キーのパース 引数は5x6の行列分の領域を割り当て済である必要があります。
-int ParseRightKey(char ans[][6])
+int ParseKey(char ans[][6])
 {
 	digitalWritePortRegister(IP1, LOW);
 	ans[0][0] = digitalRead(OP1);
