@@ -45,14 +45,16 @@ static int PrevOneShotActiveCount = 0;
 static int RepeatOneShotCode = 0;
 
 static int speedCheck = 1000;
+static bool isConnected = false;
 
 void setup() {
   // put your setup code here, to run once:
   memset(OldRKey, (char)OFF, SUM);
   memset(OldLKey, (char)OFF, SUM);
 
-  Init();
-//  InitLeftFirm();
+  InitParseKeyModule();
+
+  isConnected = InitConnection();
 
   Keyboard.begin();
 }
@@ -65,24 +67,6 @@ void loop() {
   ParseKey(RKey);
   //unsigned long end = micros();
 
-  for ( int i = 0; i <ROWMAX; i++ )
-  {
-    for ( int j = 0; j < COLMAX; j++ )
-    {
-      if ( RKey[i][j] == 0 )
-      {
-        Serial.print( "0" );
-      }
-      else
-      {
-       Serial.print( "1" ); 
-      }
-      
-    }
-    Serial.print(" ");
-  }
-    
-  Serial.print("\n");
   //delay(1000);
   
   keyboardAction(Right);
@@ -97,6 +81,18 @@ void loop() {
   memcpy(OldLKey, LKey, SUM);
 }
 
+static bool InitConnection()
+{
+  Serial1.begin(9600);
+
+  Serial1.write('c');
+  for ( int cnt = 0; cnt <100; cnt++ )
+  {
+    int inputChar = Serial1.read();
+  }
+}
+
+}
 // 左右どちらかのモジュールに対してシンボルの検索、キーコードのプレス/リリースの発射を行います。
 static void keyboardAction(LorR lr)
 {

@@ -18,7 +18,7 @@ static void digitalWritePortRegister(unsigned int pin, unsigned int hOrl);
 static char digitalReadPortRegister(unsigned int pin);
 
 // 右手モジュールの初期化。一度だけ呼び出してください
-void Init()
+void InitParseKeyModule()
 {
 	pinMode(OP1, INPUT_PULLUP);
 	pinMode(OP2, INPUT_PULLUP);
@@ -86,6 +86,8 @@ int ParseKey(char ans[][6])
 	ans[4][4] = digitalReadPortRegister(OP5);
 	ans[4][5] = digitalReadPortRegister(OP6);
 	digitalWritePortRegister(IP5, HIGH);
+	
+	return 0;
 }
 
 // ポートレジスタをいじってデジタルライトを実行します
