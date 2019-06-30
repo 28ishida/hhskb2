@@ -53,44 +53,39 @@ void setup() {
   memset(OldLKey, (char)OFF, SUM);
 
   InitParseKeyModule();
-
-  isConnected = InitConnection();
-
-  Keyboard.begin();
+  //Keyboard.begin();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
 
-  //unsigned long start = micros();
-  memset(RKey, (char)OFF, SUM);
-  ParseKey(RKey);
-  //unsigned long end = micros();
-
-  //delay(1000);
-  
-  keyboardAction(Right);
-  memcpy(OldRKey, RKey, SUM);
-
-  if ( !isConnected )
+  if ( !isConnected  )
   {
     isConnected = InitConnection();
   }
   else
   {
-    memset(LKey, (char)OFF, SUM);
-    GetKeyStatus(LKey);
-    keyboardAction(Left);
-    memcpy(OldLKey, LKey, SUM);
+    CommandAction();
   }
-  
-  //start = micros();
-  //memset(LKey, (char)OFF, SUM);
-  //ParseLeftKey(LKey);
-  //end = micros();
-  
-  //keyboardAction(Left);
-  //memcpy(OldLKey, LKey, SUM);
+}
+
+static void CommandAction()
+{
+  int command = Serial1.read();
+  if ( command == -1 )
+  {
+    Serial.print("コマンドを正しく受信できませんでした");
+    return;
+  }
+  else if ( command == 'g' )
+  {
+    memset(LKey, (char)OFF, SUM);
+    ParseKey(LKey);
+
+    for( int cnt = 0; cnt < ROWMAX; cnt++ )
+    {
+      WriteData( LKey[cnt], COLMAX );
+    }
+ }
 }
 
 /* 通信を確立させる */
@@ -99,18 +94,18 @@ static bool InitConnection()
   bool ret = false;
   Serial1.begin(9600);
 
-  Serial1.write('c');
-  for ( int cnt = 0; cnt <300; cnt++ )
+  while( true )
   {
     int inputChar = Serial1.read();
-    if ( inputChar == 'C' )
+    if ( inputChar == 'c' )
     {
       ret = true;
-      Serial.write("コネクト成功");
       break;
     }
     delay(10);
   }
+ 
+  Serial1.write('C');
   return ret;
 }
 
@@ -153,6 +148,11 @@ static int ReadData( char* ans, int size )
   {
     ans[cnt] = Serial1.read();
   }
+}
+
+static int WriteData( char* ans, int size )
+{
+  Serial1.write(ans, size);
 }
 
 /* バッファが規定バイト数貯まるのを100msec待つ。 */
