@@ -1,7 +1,7 @@
 #include <Keyboard.h>
 #include "hhskb_firm.h"
 #include "key_definition.h"
-#include "key_map.h"                             
+#include "key_map.h"
 #include <libParseKey.h>
 
 #define ONESHOT_DEF
@@ -15,6 +15,9 @@
 // ターンの時間的な長さはファームの動作速度に依存するのでファームをブラッシュアップする場合は再考すること
 #define ROSAC_DEF 28;
 
+// Firmが左か右かどちらのモードで動いているか
+static LorR FirmMode = Left;
+
 // Fnキー状態
 static bool IsFnEnable = false;
 
@@ -23,11 +26,11 @@ static bool IsLayer1Enable = false;
 
 // 現在のキー状態
 static char RKey[ROWMAX][COLMAX];
-static char LKey[ROWMAX][COLMAX];                          
+static char LKey[ROWMAX][COLMAX];
 
 // ひとつ前のキー状態のバッファ
 static char OldRKey[ROWMAX][COLMAX];
-static char OldLKey[ROWMAX][COLMAX];                                    
+static char OldLKey[ROWMAX][COLMAX];
 
 // ワンショットが実行される際に発行されるコードの予約値
 static int OneShotReserveCode = 0;
@@ -48,49 +51,96 @@ static int speedCheck = 1000;
 static bool isConnected = false;
 
 void setup() {
+
+  pinMode(10, OUTPUT);
+  pinMode(11, OUTPUT);
+
   // put your setup code here, to run once:
   memset(OldRKey, (char)OFF, SUM);
   memset(OldLKey, (char)OFF, SUM);
 
-  InitParseKeyModule();
+  FirmMode = DetectLorR();
 
-  isConnected = InitConnection();
-
-  Keyboard.begin();
-}
-
-void loop() {
-  // put your main code here, to run repeatedly:
-
-  //unsigned long start = micros();
-  memset(RKey, (char)OFF, SUM);
-  ParseKey(RKey);
-  //unsigned long end = micros();
-
-  //delay(1000);
-  
-  keyboardAction(Right);
-  memcpy(OldRKey, RKey, SUM);
-
-  if ( !isConnected )
+  if (FirmMode == Right)
   {
-    isConnected = InitConnection();
+    digitalWrite(10, HIGH);
+    Keyboard.begin();
   }
   else
   {
-    memset(LKey, (char)OFF, SUM);
-    GetKeyStatus(LKey);
-    keyboardAction(Left);
-    memcpy(OldLKey, LKey, SUM);
+    digitalWrite(11, HIGH);    
   }
   
-  //start = micros();
-  //memset(LKey, (char)OFF, SUM);
-  //ParseLeftKey(LKey);
-  //end = micros();
-  
-  //keyboardAction(Left);
-  //memcpy(OldLKey, LKey, SUM);
+
+  InitParseKeyModule();
+}
+
+void loop() 
+{
+  if ( FirmMode == Right)
+  {
+    memset(RKey, (char)OFF, SUM);
+    ParseKey(RKey);
+    keyboardAction(Right);
+    memcpy(OldRKey, RKey, SUM);
+
+    if ( !isConnected )
+    {
+      isConnected = InitConnection();
+    }
+    else
+    {
+      memset(LKey, (char)OFF, SUM);
+      GetKeyStatus(LKey);
+      keyboardAction(Left);
+      memcpy(OldLKey, LKey, SUM);
+    }
+  }
+  else
+  {
+    if (!isConnected)
+    {
+      isConnected = InitConnection();
+    }
+    else
+    {
+      CommandAction();
+    }
+  }
+}
+
+/* ファームが左モードなのか右モードなのかを判定する */
+static LorR DetectLorR()
+{
+  pinMode(2, INPUT_PULLUP);
+  if ( digitalRead(2) == LOW )
+  {
+    return Left;
+  }
+  else
+  {
+    return Right;
+  }
+}
+
+static void CommandAction()
+{
+  int command = Serial1.read();
+  if ( command == -1 )
+  {
+    Serial.print("コマンドを正しく受信できませんでした");
+    return;
+  }
+  else if ( command == 'g' )
+  {
+    memset(LKey, (char)OFF, SUM);
+    ParseKey(LKey);
+
+    for ( int cnt = 0; cnt < ROWMAX; cnt++ )
+    {
+      WriteData( LKey[cnt], COLMAX );
+    }
+  }
 }
 
 /* 通信を確立させる */
@@ -99,18 +149,18 @@ static bool InitConnection()
   bool ret = false;
   Serial1.begin(9600);
 
-  Serial1.write('c');
-  for ( int cnt = 0; cnt <300; cnt++ )
+  while ( true )
   {
     int inputChar = Serial1.read();
-    if ( inputChar == 'C' )
+    if ( inputChar == 'c' )
     {
       ret = true;
-      Serial.write("コネクト成功");
       break;
     }
     delay(10);
   }
+
+  Serial1.write('C');
   return ret;
 }
 
@@ -136,11 +186,11 @@ static int GetKeyStatus(char  ans[][6])
   Serial1.write('g');
   if ( WaitBuffer(30) != 0)
   {
-    Serial.print("規定のデータ数を受信できませんでした。今回はパースを諦めます"); 
+    Serial.print("規定のデータ数を受信できませんでした。今回はパースを諦めます");
     return -2;
   }
 
-  for( int cnt = 0; cnt < 5; cnt++ )
+  for ( int cnt = 0; cnt < 5; cnt++ )
   {
     ReadData( ans[cnt], 6 );
   }
@@ -153,6 +203,11 @@ static int ReadData( char* ans, int size )
   {
     ans[cnt] = Serial1.read();
   }
+}
+
+static int WriteData( char* ans, int size )
+{
+  Serial1.write(ans, size);
 }
 
 /* バッファが規定バイト数貯まるのを100msec待つ。 */
@@ -192,12 +247,12 @@ static void keyboardAction(LorR lr)
         if (normSymb == Fn)
         {
           IsFnEnable = true;
-//          TurnOnStatusLed(2);
+          //          TurnOnStatusLed(2);
         }
         else if (normSymb == LY1_)
         {
           IsLayer1Enable = true;
-//          TurnOnStatusLed(1);
+          //          TurnOnStatusLed(1);
         }
         else
         {
@@ -215,13 +270,13 @@ static void keyboardAction(LorR lr)
         {
           forceClear();     // IsFnEnableの前に実施する事が大事
           IsFnEnable = false;
-//          TurnOffStatusLed(2);
+          //          TurnOffStatusLed(2);
         }
         else if (normSymb == LY1_)
         {
           forceClear();     // IsFnEnableの前に実施する事が大事
           IsLayer1Enable = false;
-//          TurnOffStatusLed(1);
+          //          TurnOffStatusLed(1);
         }
         else
         {
@@ -229,7 +284,7 @@ static void keyboardAction(LorR lr)
           {
             sendKey(normSymb, false);
             actionOneShot(normSymb, osSymb);
-          }                                                           
+          }
         }
       }
     }
@@ -251,7 +306,7 @@ static bool repeatOneShotStart(int otgt)
     {
       clearPrevOneShotCode();   // 自動連射モードに入るので記録はクリアしてOK
       RepeatOneShotCode = otgt;
-      sendKey(otgt, true);    // ワンショットキーを押しっぱなし ワンショット 
+      sendKey(otgt, true);    // ワンショットキーを押しっぱなし ワンショット
       ret = true;
     }
     else
@@ -286,7 +341,7 @@ static bool repeatOneShotEnd(int osSymb)
 // ワンショットの実行
 static void actionOneShot(int normSymb, int osSymb)
 {
-#ifdef ONESHOT_DEF 
+#ifdef ONESHOT_DEF
   if ((OneShotReserveCode == osSymb) && (OneShotBaseCode == normSymb))
   {
     sendKey(OneShotReserveCode, true);
@@ -333,7 +388,7 @@ static void  checkPrevOneShotCode()
   }
 }
 
-// ワンショットの予約  
+// ワンショットの予約
 static void reserveOneShot(int normSymb, int osSymb)
 {
 #ifdef ONESHOT_DEF
