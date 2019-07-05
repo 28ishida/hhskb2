@@ -54,6 +54,7 @@ void setup() {
 
   pinMode(10, OUTPUT);
   pinMode(11, OUTPUT);
+  pinMode(12, OUTPUT);
 
   // put your setup code here, to run once:
   memset(OldRKey, (char)OFF, SUM);
@@ -63,19 +64,22 @@ void setup() {
 
   if (FirmMode == Right)
   {
-    digitalWrite(10, HIGH);
     Keyboard.begin();
+    digitalWrite(10, HIGH);
+    InitConnection(Right);
+    digitalWrite(12, HIGH);
   }
   else
   {
-    digitalWrite(11, HIGH);    
+    digitalWrite(11, HIGH);
+    InitConnection(Left);
+    digitalWrite(12, HIGH);
   }
-  
 
   InitParseKeyModule();
 }
 
-void loop() 
+void loop()
 {
   if ( FirmMode == Right)
   {
@@ -86,10 +90,11 @@ void loop()
 
     if ( !isConnected )
     {
-      isConnected = InitConnection();
+      isConnected = InitConnection(Right);
     }
     else
     {
+      digitalWrite(10, LOW);
       memset(LKey, (char)OFF, SUM);
       GetKeyStatus(LKey);
       keyboardAction(Left);
@@ -100,7 +105,7 @@ void loop()
   {
     if (!isConnected)
     {
-      isConnected = InitConnection();
+      isConnected = InitConnection(Left);
     }
     else
     {
@@ -144,23 +149,39 @@ static void CommandAction()
 }
 
 /* 通信を確立させる */
-static bool InitConnection()
+static bool InitConnection(LorR either)
 {
   bool ret = false;
   Serial1.begin(9600);
 
-  while ( true )
+  if ( either == Right )
   {
-    int inputChar = Serial1.read();
-    if ( inputChar == 'c' )
+    Serial1.write('c');
+    for ( int cnt = 0; cnt < 300; cnt++ )
     {
-      ret = true;
-      break;
+      int inputChar = Serial1.read();
+      if ( inputChar == 'C' )
+      {
+        ret = true;
+        break;
+      }
+      delay(10);
     }
-    delay(10);
   }
-
-  Serial1.write('C');
+  else
+  {
+    while ( true )
+    {
+      int inputChar = Serial1.read();
+      if ( inputChar == 'c' )
+      {
+        ret = true;
+        break;
+      }
+      delay(10);
+    }
+    Serial1.write('C');
+  }
   return ret;
 }
 
