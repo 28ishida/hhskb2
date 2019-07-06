@@ -2,7 +2,8 @@
 #include "hhskb_firm.h"
 #include "key_definition.h"
 #include "key_map.h"
-#include <libParseKey.h>
+#include "parseKey.h"
+#include "sockCom.h"
 
 #define ONESHOT_DEF
 //#undef ONESHOT_DEF
@@ -18,11 +19,11 @@
 // Firmが左か右かどちらのモードで動いているか
 static LorR FirmMode = Left;
 
-// Fnキー状態
-static bool IsFnEnable = false;
-
 // Layer1キー状態
 static bool IsLayer1Enable = false;
+
+// Layer2キー状態
+static bool IsLayer2Enable = false;
 
 // 現在のキー状態
 static char RKey[ROWMAX][COLMAX];
@@ -130,10 +131,10 @@ static LorR DetectLorR()
 
 static void CommandAction()
 {
-  int command = Serial1.read();
-  if ( command == -1 )
+  //int command = Seria1.read();
+  char command;
+  if ( ReadData(&command, 1) == -1 )
   {
-    Serial.print("コマンドを正しく受信できませんでした");
     return;
   }
   else if ( command == 'g' )
@@ -146,111 +147,6 @@ static void CommandAction()
       WriteData( LKey[cnt], COLMAX );
     }
   }
-}
-
-/* 通信を確立させる */
-static bool InitConnection(LorR either)
-{
-  bool ret = false;
-  Serial1.begin(9600);
-
-  if ( either == Right )
-  {
-    Serial1.write('c');
-    for ( int cnt = 0; cnt < 300; cnt++ )
-    {
-      int inputChar = Serial1.read();
-      if ( inputChar == 'C' )
-      {
-        ret = true;
-        break;
-      }
-      delay(10);
-    }
-  }
-  else
-  {
-    while ( true )
-    {
-      int inputChar = Serial1.read();
-      if ( inputChar == 'c' )
-      {
-        ret = true;
-        break;
-      }
-      delay(10);
-    }
-    Serial1.write('C');
-  }
-  return ret;
-}
-
-/* 相手のキー状態を取得する */
-static int GetKeyStatus(char  ans[][6])
-{
-  int ret = -1;
-  for ( int cnt = 0; cnt < 100; cnt++ )
-  {
-    int inputChar = Serial1.read();
-    if ( inputChar == -1)
-    {
-      ret = 0;
-      break;
-    }
-  }
-  if ( ret == -1 )
-  {
-    Serial.print("100回読み出してもゴミが読める。今回はパースを諦めます");
-    return ret;
-  }
-
-  Serial1.write('g');
-  if ( WaitBuffer(30) != 0)
-  {
-    Serial.print("規定のデータ数を受信できませんでした。今回はパースを諦めます");
-    return -2;
-  }
-
-  for ( int cnt = 0; cnt < 5; cnt++ )
-  {
-    ReadData( ans[cnt], 6 );
-  }
-}
-
-/* Serial1からデータをsizeバイト読み込む。到着していないことは考慮してない */
-static int ReadData( char* ans, int size )
-{
-  for ( int cnt = 0; cnt < size; cnt++ )
-  {
-    ans[cnt] = Serial1.read();
-  }
-}
-
-static int WriteData( char* ans, int size )
-{
-  Serial1.write(ans, size);
-}
-
-/* バッファが規定バイト数貯まるのを100msec待つ。 */
-static int WaitBuffer(int size)
-{
-  int ret = -1;
-  for ( int cnt = 0; cnt < 100; cnt++ )
-  {
-    if ( Serial1.available() == size )
-    {
-      ret = 0;
-      break;
-    }
-    if ( Serial1.available() > size )
-    {
-      ret = -2;
-      break;
-    }
-    delay(1);
-  }
-
-  return ret;
 }
 
 // 左右どちらかのモジュールに対してシンボルの検索、キーコードのプレス/リリースの発射を行います。
@@ -267,7 +163,7 @@ static void keyboardAction(LorR lr)
       {
         if (normSymb == Fn)
         {
-          IsFnEnable = true;
+          IsLayer2Enable = true;
           //          TurnOnStatusLed(2);
         }
         else if (normSymb == LY1_)
@@ -289,13 +185,13 @@ static void keyboardAction(LorR lr)
       {
         if (normSymb == Fn)
         {
-          forceClear();     // IsFnEnableの前に実施する事が大事
-          IsFnEnable = false;
+          forceClear();     // IsLayer2Enableの前に実施する事が大事
+          IsLayer2Enable = false;
           //          TurnOffStatusLed(2);
         }
         else if (normSymb == LY1_)
         {
-          forceClear();     // IsFnEnableの前に実施する事が大事
+          forceClear();     // IsLayer2Enableの前に実施する事が大事
           IsLayer1Enable = false;
           //          TurnOffStatusLed(1);
         }
@@ -501,9 +397,9 @@ static int getSymbol(int row, int col, LorR lr)
   int ret = 0;
   if (lr == Left)
   {
-    if (IsFnEnable)
+    if (IsLayer2Enable)
     {
-      ret = LFnSymbol[row][col];
+      ret = LLayer2Symbol[row][col];
     }
     else if (IsLayer1Enable)
     {
@@ -516,9 +412,9 @@ static int getSymbol(int row, int col, LorR lr)
   }
   else
   {
-    if (IsFnEnable)
+    if (IsLayer2Enable)
     {
-      ret = RFnSymbol[row][col];
+      ret = RLayer2Symbol[row][col];
     }
     else if (IsLayer1Enable)
     {

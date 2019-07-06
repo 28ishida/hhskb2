@@ -5,6 +5,7 @@
 #define NOP_ 0
 #define Fn   Fn
 #define LY1_ LAYER1
+#define LY2  LAYER2
 
 #define DELE KEY_DELETE
 #define HOME KEY_HOME

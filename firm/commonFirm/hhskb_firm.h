@@ -17,6 +17,7 @@ static const char TAB = 0x09;
 static const char SPC = 0x20;
 static const int Fn = 0xf0;		// 適当
 static const int LAYER1 = 0xf1;	// 適当
+static const int LAYER2 = 0xf2;  // 適当
 static const int PRTSC = 0xce;  // print screen?
 static const int KANA = 0x15;
 static const int KANJ = 0x19;
