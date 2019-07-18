@@ -14,8 +14,8 @@ static int RSymbol[ROWMAX][COLMAX] =
 // 右手用Raise押下時シンボル 
 static int RLayer1Symbol[ROWMAX][COLMAX] =
 {
-  { F6__, F7__, F8__, F9__, F10_,  DELE },
-  { 'y',   '_',  PRTS, 'o',  '+',  '\\' },
+  { F6__, F7__, F8__, F9__, F10_,  BS__ },
+  { 'y',   '_',  PRTS, '-',  '+',  '\\' },
   { LEFT, DOWN, UP__, RIGT, 'l',  RET_ },
   { 'n',   '-',  ',',  '.',  '/',  RSFT },
   { RCTL, RALT, LY2, NASB, NASB, NASB }    // oneshot用
