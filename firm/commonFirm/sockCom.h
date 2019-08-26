@@ -3,7 +3,7 @@
 #include "hhskb_firm.h"
 
 /* 通信を確立させる */
-bool InitConnection(LorR either);
+bool InitConnection(bool isServer);
 
 /* 相手のキー状態を取得する */
 int GetKeyStatus(char  ans[][COLMAX]);

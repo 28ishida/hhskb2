@@ -1,15 +1,17 @@
 #include <arduino.h>
 #include "sockCom.h"
 
+#define SERIAL_SPEED 115200
+
 static int WaitBuffer(int size);
 
 /* 通信を確立させる */
-bool InitConnection(LorR either)
+bool InitConnection( bool isServer )
 {
   bool ret = false;
-  Serial1.begin(9600);
+  Serial1.begin(SERIAL_SPEED);
 
-  if ( either == Right )
+  if ( isServer )
   {
     Serial1.write('c');
     for ( int cnt = 0; cnt < 300; cnt++ )

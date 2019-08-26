@@ -51,6 +51,8 @@ static int RepeatOneShotCode = 0;
 static int speedCheck = 1000;
 static bool isConnected = false;
 
+static bool isServer = true;
+
 void setup() {
 
   pinMode(10, OUTPUT);
@@ -62,19 +64,33 @@ void setup() {
   memset(OldLKey, (char)OFF, SUM);
 
   FirmMode = DetectLorR();
-
-  if (FirmMode == Right)
+  if ( FirmMode == Right )
   {
-    Keyboard.begin();
-    digitalWrite(10, HIGH);
-    InitConnection(Right);
-    digitalWrite(12, HIGH);
+    isServer = false;
   }
   else
   {
-    digitalWrite(11, HIGH);
-    InitConnection(Left);
-    digitalWrite(12, HIGH);
+    isServer = true;
+  }
+
+  if (FirmMode == Left)
+  {
+    Keyboard.begin();
+    digitalWrite(10, HIGH);
+    isConnected = InitConnection(isServer);
+    if ( isConnected )
+    {
+      digitalWrite(11, HIGH);
+    } 
+  }
+  else
+  {
+    digitalWrite(10, HIGH);
+    isConnected = InitConnection(isServer);
+    if ( isConnected )
+    {
+      digitalWrite(11, HIGH);
+    }
   }
 
   InitParseKeyModule();
@@ -82,34 +98,35 @@ void setup() {
 
 void loop()
 {
-  if ( FirmMode == Right)
+  if ( isServer )
   {
-    memset(RKey, (char)OFF, SUM);
-    ParseKey(RKey);
-    keyboardAction(Right);
-    memcpy(OldRKey, RKey, SUM);
+    memset(LKey, (char)OFF, SUM);
+    ParseKey(LKey);
+    keyboardAction(Left);
+    memcpy(OldLKey, LKey, SUM);
 
     if ( !isConnected )
     {
-      isConnected = InitConnection(Right);
+      isConnected = InitConnection(isServer);
     }
     else
     {
-      digitalWrite(10, LOW);
-      memset(LKey, (char)OFF, SUM);
-      GetKeyStatus(LKey);
-      keyboardAction(Left);
-      memcpy(OldLKey, LKey, SUM);
+      digitalWrite(12, HIGH);
+      memset(RKey, (char)OFF, SUM);
+      GetKeyStatus(RKey);
+      keyboardAction(Right);
+      memcpy(OldRKey, RKey, SUM);
     }
   }
   else
   {
     if (!isConnected)
     {
-      isConnected = InitConnection(Left);
+      isConnected = InitConnection(isServer);
     }
     else
     {
+      digitalWrite(12, HIGH);
       CommandAction();
     }
   }
@@ -139,12 +156,12 @@ static void CommandAction()
   }
   else if ( command == 'g' )
   {
-    memset(LKey, (char)OFF, SUM);
-    ParseKey(LKey);
+    memset(RKey, (char)OFF, SUM);
+    ParseKey(RKey);
 
     for ( int cnt = 0; cnt < ROWMAX; cnt++ )
     {
-      WriteData( LKey[cnt], COLMAX );
+      WriteData( RKey[cnt], COLMAX );
     }
   }
 }
